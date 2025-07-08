@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI Debug - Environment Variables</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-section h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border: 1px solid #e9ecef;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>OpenAI API Debug Tool</h1>
+    <p>This tool helps debug OpenAI API integration issues in your Vite/React application.</p>
+
+    <div class="debug-section">
+        <h2>1. Environment Variables Check</h2>
+        <div id="env-check">
+            <p>Checking environment variables...</p>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>2. OpenAI API Key Validation</h2>
+        <div id="api-key-check">
+            <p>Checking API key format...</p>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>3. OpenAI Client Test</h2>
+        <button id="test-openai-btn">Test OpenAI Connection</button>
+        <div id="openai-test-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>4. Browser Console Logs</h2>
+        <p>Check the browser console for additional error messages. Look for:</p>
+        <ul>
+            <li>401 Unauthorized errors</li>
+            <li>CORS errors</li>
+            <li>Network errors</li>
+            <li>OpenAI API errors</li>
+        </ul>
+    </div>
+
+    <div class="debug-section">
+        <h2>5. Manual cURL Test</h2>
+        <p>Test your API key directly with cURL:</p>
+        <div class="code-block" id="curl-command">
+            Loading API key...
+        </div>
+        <button id="copy-curl-btn">Copy cURL Command</button>
+    </div>
+
+    <script type="module">
+        // Debug environment variables
+        function checkEnvironmentVariables() {
+            const envCheckDiv = document.getElementById('env-check');
+            let html = '';
+            
+            // Get all environment variables that start with VITE_
+            const viteVars = {};
+            for (const key in import.meta.env) {
+                if (key.startsWith('VITE_')) {
+                    viteVars[key] = import.meta.env[key];
+                }
+            }
+            
+            html += '<h3>Vite Environment Variables:</h3>';
+            html += '<div class="code-block">';
+            html += JSON.stringify(viteVars, null, 2);
+            html += '</div>';
+            
+            // Check specific OpenAI variables
+            const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
+            const openaiOrg = import.meta.env.VITE_OPENAI_ORGANIZATION;
+            
+            if (openaiKey) {
+                html += '<div class="status success">✓ VITE_OPENAI_API_KEY is loaded</div>';
+                html += '<div class="code-block">Key format: ' + openaiKey.substring(0, 10) + '...' + openaiKey.substring(openaiKey.length - 4) + '</div>';
+            } else {
+                html += '<div class="status error">✗ VITE_OPENAI_API_KEY is not loaded</div>';
+            }
+            
+            if (openaiOrg) {
+                html += '<div class="status success">✓ VITE_OPENAI_ORGANIZATION is loaded</div>';
+            } else {
+                html += '<div class="status warning">⚠ VITE_OPENAI_ORGANIZATION is not set (optional)</div>';
+            }
+            
+            envCheckDiv.innerHTML = html;
+        }
+        
+        // Check API key format
+        function checkApiKeyFormat() {
+            const apiKeyCheckDiv = document.getElementById('api-key-check');
+            const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+            
+            let html = '';
+            
+            if (!apiKey) {
+                html += '<div class="status error">✗ API key is not available</div>';
+            } else {
+                // Check if it starts with sk-
+                if (apiKey.startsWith('sk-')) {
+                    html += '<div class="status success">✓ API key format looks correct (starts with sk-)</div>';
+                } else {
+                    html += '<div class="status error">✗ API key format is incorrect (should start with sk-)</div>';
+                }
+                
+                // Check length
+                if (apiKey.length > 40) {
+                    html += '<div class="status success">✓ API key length looks reasonable</div>';
+                } else {
+                    html += '<div class="status error">✗ API key seems too short</div>';
+                }
+                
+                // Check for obvious issues
+                if (apiKey.includes('your_api_key_here') || apiKey.includes('replace_with')) {
+                    html += '<div class="status error">✗ API key appears to be a placeholder</div>';
+                }
+            }
+            
+            apiKeyCheckDiv.innerHTML = html;
+        }
+        
+        // Test OpenAI connection
+        async function testOpenAI() {
+            const testBtn = document.getElementById('test-openai-btn');
+            const resultDiv = document.getElementById('openai-test-result');
+            
+            testBtn.disabled = true;
+            testBtn.textContent = 'Testing...';
+            
+            try {
+                // Import OpenAI client
+                const { OpenAI } = await import('openai');
+                
+                const openai = new OpenAI({
+                    apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+                    organization: import.meta.env.VITE_OPENAI_ORGANIZATION,
+                    dangerouslyAllowBrowser: true
+                });
+                
+                // Test with a simple API call
+                const response = await openai.chat.completions.create({
+                    model: "gpt-3.5-turbo",
+                    messages: [
+                        {
+                            role: "user",
+                            content: "Say 'Hello' in exactly one word."
+                        }
+                    ],
+                    max_tokens: 5
+                });
+                
+                resultDiv.innerHTML = `
+                    <div class="status success">✓ OpenAI API connection successful!</div>
+                    <div class="code-block">Response: ${JSON.stringify(response, null, 2)}</div>
+                `;
+                
+            } catch (error) {
+                console.error('OpenAI Test Error:', error);
+                
+                let errorMessage = error.message || 'Unknown error';
+                let statusClass = 'error';
+                
+                if (error.status === 401) {
+                    errorMessage = 'Authentication failed - Invalid API key';
+                } else if (error.status === 429) {
+                    errorMessage = 'Rate limit exceeded - Try again later';
+                } else if (error.status === 403) {
+                    errorMessage = 'Forbidden - Check API key permissions';
+                } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage = 'Network error - Check your internet connection';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="status ${statusClass}">✗ OpenAI API test failed</div>
+                    <div class="code-block">Error: ${errorMessage}</div>
+                    <div class="code-block">Full error: ${JSON.stringify(error, null, 2)}</div>
+                `;
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = 'Test OpenAI Connection';
+            }
+        }
+        
+        // Generate cURL command
+        function generateCurlCommand() {
+            const curlDiv = document.getElementById('curl-command');
+            const copyBtn = document.getElementById('copy-curl-btn');
+            const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+            
+            if (!apiKey) {
+                curlDiv.textContent = 'API key not available';
+                copyBtn.disabled = true;
+                return;
+            }
+            
+            const curlCommand = `curl -X POST https://api.openai.com/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${apiKey}" \\
+  -d '{
+    "model": "gpt-3.5-turbo",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello"
+      }
+    ],
+    "max_tokens": 5
+  }'`;
+            
+            curlDiv.textContent = curlCommand;
+            
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(curlCommand).then(() => {
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy cURL Command';
+                    }, 2000);
+                });
+            };
+        }
+        
+        // Initialize checks
+        checkEnvironmentVariables();
+        checkApiKeyFormat();
+        generateCurlCommand();
+        
+        // Add event listener for OpenAI test
+        document.getElementById('test-openai-btn').addEventListener('click', testOpenAI);
+    </script>
+</body>
+</html>

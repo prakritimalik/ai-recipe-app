@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Supabase Connection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="listUsers()">List Users (as admin)</button>
+    <div id="results"></div>
+
+    <script>
+        const supabase = window.supabase.createClient(
+            'https://uwpdkyvcpusqgotnojhq.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3cGRreXZjcHVzcWdvdG5vamhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MDU3OTIsImV4cCI6MjA2NzQ4MTc5Mn0.vwFO4mpJKwjOmvPgJ49qWAMb5DAkVZpvcgpJ6xwdhuE'
+        );
+
+        async function testConnection() {
+            try {
+                console.log('Testing connection...');
+                const { data, error } = await supabase.auth.getSession();
+                document.getElementById('results').innerHTML = 
+                    '<p>Connection successful!</p>' + 
+                    '<pre>' + JSON.stringify({ data, error }, null, 2) + '</pre>';
+            } catch (err) {
+                document.getElementById('results').innerHTML = 
+                    '<p>Connection failed: ' + err.message + '</p>';
+            }
+        }
+
+        async function listUsers() {
+            try {
+                // This will only work if RLS is configured properly
+                const { data, error } = await supabase.from('profiles').select('*');
+                document.getElementById('results').innerHTML = 
+                    '<p>Profiles query result:</p>' + 
+                    '<pre>' + JSON.stringify({ data, error }, null, 2) + '</pre>';
+            } catch (err) {
+                document.getElementById('results').innerHTML = 
+                    '<p>Query failed: ' + err.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

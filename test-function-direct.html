@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Edge Function</title>
+</head>
+<body>
+    <h1>Testing Edge Function</h1>
+    <button id="testBtn">Test Generate Recipe</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+        
+        const supabase = createClient(
+            'https://qbohpvqmrsjeqecjlopy.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFib2hwdnFtcnNqZXFlY2psb3B5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MDkyMTEsImV4cCI6MjA2NzQ4NTIxMX0.MZbQjKGfTfjlxY0rkr5ocaaHNwqxlMy_LNWYFqA05p4'
+        )
+
+        async function testFunction() {
+            console.log('🧪 Testing Edge Function...')
+            document.getElementById('result').innerHTML = 'Testing...'
+            
+            try {
+                const { data, error } = await supabase.functions.invoke('generate-recipe', {
+                    body: {
+                        ingredients: ['chicken', 'rice'],
+                        cuisine: 'Asian',
+                        dietaryRestrictions: [],
+                        cookingTime: '30',
+                        servings: '4',
+                        difficulty: 'medium'
+                    }
+                })
+
+                if (error) {
+                    console.error('❌ Error:', error)
+                    document.getElementById('result').innerHTML = `Error: ${JSON.stringify(error, null, 2)}`
+                } else {
+                    console.log('✅ Success:', data)
+                    document.getElementById('result').innerHTML = `Success! Generated ${data.recipes?.length || 0} recipes`
+                }
+            } catch (err) {
+                console.error('💥 Exception:', err)
+                document.getElementById('result').innerHTML = `Exception: ${err.message}`
+            }
+        }
+
+        // Add event listener
+        document.getElementById('testBtn').addEventListener('click', testFunction)
+    </script>
+</body>
+</html>
