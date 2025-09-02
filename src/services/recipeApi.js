@@ -28,7 +28,7 @@ export async function generateRecipe(params) {
       throw new Error('At least one ingredient is required');
     }
 
-    // Call the Supabase Edge Function
+    // Call the Supabase Edge Function (uses anon key automatically for unauthenticated users)
     const { data, error } = await supabase.functions.invoke('generate-recipe', {
       body: cleanParams
     });

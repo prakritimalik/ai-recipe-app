@@ -15,6 +15,8 @@ serve(async (req: Request) => {
   }
 
   try {
+    // Allow anonymous access - no authentication required for recipe generation
+    console.log('Processing recipe generation request...')
     // Get the OpenAI API key from environment variables
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openaiApiKey) {

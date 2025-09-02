@@ -9,6 +9,7 @@ import { useDatabase } from './useDatabase';
  */
 export const useRecipeSaving = () => {
   const { user } = useAuth();
+  
   const { saveRecipe, getUserSavedRecipes, deleteRecipe } = useDatabase();
   const navigate = useNavigate();
   const [savedRecipeIds, setSavedRecipeIds] = useState(new Set());
